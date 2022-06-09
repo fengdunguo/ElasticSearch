@@ -27,11 +27,50 @@ class EsMessage
         return self::$obj;
     }
 
-    //添加数据到Es
-    public static function SaveEs($obj){
+    //初始化数据库
+    public static function JoinEs($index,$type,$doc){
         $params = [
-            "index"=>"week3",
-            "type"=>"goods",
+            "index"=>"$index",
+            "body"=>[
+                "mappings"=>[
+                    "$type"=>[
+                        "properties"=>[
+                            "$doc"=>[
+                                "type"=>"text",
+                                "analyzer"=>"ik_max_word"
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+        return self::$client->indices()->create($params);
+    }
+
+    /**
+     * 判断索引是否存在
+     * @param string $index_name
+     * @return bool|mixed|string
+     */
+    public function ExistsIndex($index_name)
+    {
+        $params = [
+            'index' => $index_name
+        ];
+        return self::$client->indices()->exists($params);
+    }
+
+    /**
+     * 添加索引
+     * @param $index
+     * @param $type
+     * @param $obj
+     * @return array|callable
+     */
+    public static function SaveEs($index,$type,$obj){
+        $params = [
+            "index"=>$index,
+            "type"=>$type,
             "id"=>$obj->id,
             "body"=>[
                 "goods_name"=>$obj->goods_name,
@@ -41,12 +80,61 @@ class EsMessage
         ];
         return self::$client->index($params);
     }
+    /**
+     * 删除索引
+     * @param string $index_name
+     * @return array
+     */
+    public function DeleteIndex($index_name) {
+        $params = ['index' => $index_name];
+        return self::$client->indices()->delete($params);
+    }
 
-    //搜索数据
-    public  static function SearchEs($search){
+    /**
+     * 判断文档存在
+     * @param int $id
+     * @param string $index_name
+     * @param string $type_name
+     * @return array|bool
+     */
+    public function ExistsDoc($id,$index,$type) {
         $params = [
-            "index"=>"week3",
-            "type"=>"goods",
+            'index' => $index,
+            'type' => $type,
+            'id' => $id
+        ];
+        return self::$client->exists($params);
+    }
+    /**
+     * 更新文档
+     * @param int $id
+     * @param string $index_name
+     * @param string $type_name
+     * @param array $body ['doc' => ['title' => '苹果手机iPhoneX']]
+     * @return array
+     */
+    public function update_doc($id,$index_name,$type_name,$body=[]) {
+        // 可以灵活添加新字段,最好不要乱添加
+        $params = [
+            'index' => $index_name,
+            'type' => $type_name,
+            'id' => $id,
+            'body' => $body
+        ];
+        return self::$client->update($params);
+    }
+
+    /**
+     * 搜索字段
+     * @param $index
+     * @param $type
+     * @param $search
+     * @return array
+     */
+    public  static function SearchEs($index,$type,$search){
+        $params = [
+            "index"=>$index,
+            "type"=>$type,
             "body"=>[
                 "query"=>[
                     "match"=>[
@@ -58,6 +146,7 @@ class EsMessage
                     "pre_tags"=>"<span style='color: red'>",
                     "post_tags"=>"</span>",
                     "fields"=>[
+                        //搜索的字段
                         "goods_name"=>new \stdClass()
                     ]
                 ]
@@ -72,4 +161,6 @@ class EsMessage
         unset($val);
         return $res;
     }
+
+
 }
