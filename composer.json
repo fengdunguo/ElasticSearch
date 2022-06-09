@@ -1,0 +1,21 @@
+{
+    "name": "china-feng/elastic-search",
+    "description": "first try",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "ChinaFeng\\ElasticSearch\\": "ElasticSearch/"
+        }
+    },
+    "authors": [
+        {
+            "name": "冯敦国",
+            "email": "fdg1110@qq.com"
+        }
+    ],
+    "require": {
+        "elasticsearch/elasticsearch": "7.*"
+
+    }
+}
